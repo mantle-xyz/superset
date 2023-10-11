@@ -89,6 +89,11 @@ class CeleryConfig:
         },
     }
 
+ENABLE_ALERTS = True
+ENABLE_SCHEDULED_EMAIL_REPORTS = True
+DEFAULT_FEATURE_FLAGS = {
+  'ALERT_REPORTS': True
+}
 
 CELERY_CONFIG = CeleryConfig
 
@@ -99,6 +104,7 @@ WEBDRIVER_BASEURL = "http://superset:8088/"
 WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 
 SQLLAB_CTAS_NO_LIMIT = True
+SLACK_API_TOKEN = "xoxb-5963674992788-5958313439125-Rra926U43Iuj0Fmsjt8pXhMh"
 
 #
 # Optionally import superset_config_docker.py (which will have been included on

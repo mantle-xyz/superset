@@ -449,7 +449,7 @@ DEFAULT_FEATURE_FLAGS: dict[str, bool] = {
     "VERSIONED_EXPORT": True,  # deprecated
     "EMBEDDED_SUPERSET": False,
     # Enables Alerts and reports new implementation
-    "ALERT_REPORTS": False,
+    "ALERT_REPORTS": True,
     "DASHBOARD_RBAC": False,
     "ENABLE_EXPLORE_DRAG_AND_DROP": True,  # deprecated
     "ENABLE_ADVANCED_DATA_TYPES": False,
@@ -1332,8 +1332,14 @@ EMAIL_REPORTS_SUBJECT_PREFIX = "[Report] "
 EMAIL_REPORTS_CTA = "Explore in Superset"
 
 # Slack API token for the superset reports, either string or callable
-SLACK_API_TOKEN: Callable[[], str] | str | None = None
+# SLACK_API_TOKEN: Callable[[], str] | str | None = None
+SLACK_API_TOKEN = "xoxb-5963674992788-5958313439125-Rra926U43Iuj0Fmsjt8pXhMh"
 SLACK_PROXY = None
+
+# Lark Bot api_id and app_secret for the superset reports, require string
+APP_ID = "cli_a597c841fd785009"
+APP_SECRET = "2eFtCbED7nT9kxVI5fMt5bEYzjPzhsXp"
+
 
 # The webdriver to use for generating reports. Use one of the following
 # firefox

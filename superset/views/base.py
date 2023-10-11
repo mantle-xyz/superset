@@ -402,6 +402,12 @@ def cached_common_bootstrap_data(user: User, locale: str) -> dict[str, Any]:
             ReportRecipientType.EMAIL,
             ReportRecipientType.SLACK,
         ]
+    if conf.get("APP_SECRET"):
+        frontend_config["ALERT_REPORTS_NOTIFICATION_METHODS"] = [
+            ReportRecipientType.EMAIL,
+            ReportRecipientType.SLACK,
+            ReportRecipientType.LARK,
+        ]
     else:
         frontend_config["ALERT_REPORTS_NOTIFICATION_METHODS"] = [
             ReportRecipientType.EMAIL,
