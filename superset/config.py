@@ -1337,8 +1337,8 @@ SLACK_API_TOKEN = "xoxb-5963674992788-5958313439125-Rra926U43Iuj0Fmsjt8pXhMh"
 SLACK_PROXY = None
 
 # Lark Bot api_id and app_secret for the superset reports, require string
-APP_ID = "cli_a597c841fd785009"
-APP_SECRET = "2eFtCbED7nT9kxVI5fMt5bEYzjPzhsXp"
+APP_ID = "cli_a5a89dad26f8500a"
+APP_SECRET = "tLsHfkBB7TbEH0W4TVp9udLlnlnO8xr1"
 
 
 # The webdriver to use for generating reports. Use one of the following
@@ -1348,7 +1348,7 @@ APP_SECRET = "2eFtCbED7nT9kxVI5fMt5bEYzjPzhsXp"
 # chrome:
 #   Requires: headless chrome
 #   Limitations: unable to generate screenshots of elements
-WEBDRIVER_TYPE = "firefox"
+WEBDRIVER_TYPE = "chrome"
 
 # Window size - this will impact the rendering of the data
 WEBDRIVER_WINDOW = {
@@ -1368,7 +1368,17 @@ WEBDRIVER_CONFIGURATION: dict[Any, Any] = {"service_log_path": "/dev/null"}
 
 # Additional args to be passed as arguments to the config object
 # Note: If using Chrome, you'll want to add the "--marionette" arg.
-WEBDRIVER_OPTION_ARGS = ["--headless"]
+WEBDRIVER_OPTION_ARGS = [
+    "--force-device-scale-factor=2.0",
+    "--high-dpi-support=2.0",
+    "--headless",
+    "--disable-gpu",
+    "--disable-dev-shm-usage",
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-extensions",
+    "--marionette"
+]
 
 # The base URL to query for accessing the user interface
 WEBDRIVER_BASEURL = "http://0.0.0.0:8080/"

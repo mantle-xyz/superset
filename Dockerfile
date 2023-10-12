@@ -95,6 +95,20 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     && chown -R superset:superset superset/translations
 
 COPY --chmod=755 ./docker/run-server.sh /usr/bin/
+RUN apt-get update && \
+    apt-get -y install wget && \
+    apt-get -y install unzip && \
+    wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_110.0.5481.96-1_amd64.deb && \
+    apt-get install -y --no-install-recommends ./google-chrome-stable_110.0.5481.96-1_amd64.deb && \
+    rm -f google-chrome-stable_current_amd64.deb
+
+RUN export CHROMEDRIVER_VERSION=$(curl --silent https://chromedriver.storage.googleapis.com/LATEST_RELEASE_110) && \
+    wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip && \
+    unzip chromedriver_linux64.zip -d /usr/bin && \
+    chmod 755 /usr/bin/chromedriver && \
+    rm -f chromedriver_linux64.zip
+
+RUN pip install --no-cache gevent psycopg2 redis
 USER superset
 
 HEALTHCHECK CMD curl -f "http://localhost:${SUPERSET_PORT}/health"

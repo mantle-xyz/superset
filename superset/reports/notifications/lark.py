@@ -20,6 +20,8 @@ import logging
 import time
 from io import IOBase
 from typing import Optional, Union
+from collections.abc import Sequence
+from requests_toolbelt import MultipartEncoder
 
 import requests
 from flask_babel import gettext as __
@@ -47,8 +49,7 @@ class LarkNotification(BaseNotification):  # pylint: disable=too-few-public-meth
                           data=json.dumps(data))
         result = r.json()
         print(r)
-        logger.info("lark api status_code:%d, header:%s, response: %s", r.status_code,
-                    json.dumps(r.headers), result)
+        logger.info("lark api status_code:%d, response: %s", r.status_code, result)
         return result
 
     def _get_webhook_url(self) -> str:
@@ -65,31 +66,37 @@ class LarkNotification(BaseNotification):  # pylint: disable=too-few-public-meth
             return result["tenant_access_token"]
 
     @retry(requests.HTTPError, delay=5, backoff=1, tries=5)
-    def _files_upload(self, tenant_access_token: str, file: bytes) -> str:
+    def _files_upload(self, tenant_access_token: str, files: Sequence[bytes]) -> str:
         try:
-            img_path = "/tmp/" + self._content.name + ".png"
-            with open(img_path, 'wb') as f:
-                f.write(file)
-            r = requests.post('https://open.larksuite.com/open-apis/im/v1/images',
-                              headers={
-                                  "Authorization": "Bearer %s" % tenant_access_token},
-                              data={"image_type": "message"},
-                              files={"image": open(img_path, 'rb')}, stream=True)
+            for i,file in enumerate(files):
+                img_path = "/tmp/" + self._content.name+ str(i) + ".png"
+                logger.info("img path: %s",img_path)
+                with open(img_path, 'wb') as f:
+                    f.write(file)
+
+                url = "https://open.larksuite.com/open-apis/im/v1/images"
+                form = {'image_type': 'message',
+                        'image': (open(img_path, 'rb'))}
+                multi_form = MultipartEncoder(form)
+                headers = {
+                    "Authorization": "Bearer %s" % tenant_access_token
+                }
+                headers['Content-Type'] = multi_form.content_type
+                r = requests.request("POST", url, headers=headers, data=multi_form)
+                print(r.content)
 
             r.raise_for_status()
             result = r.json()
             print(r)
-            logger.info("lark api status_code:%d, header:%s, response: %s",
-                        r.status_code,
-                        json.dumps(r.headers), result)
+            logger.info("lark api status_code:%d, response: %s",
+                        r.status_code, result)
             if result is not None:
                 if result["code"] == 0:
                     return result["data"]["image_key"]
                 elif result['code'] == 40010:
-                    logger.error("Upload image error, response header=>%s,body=>%s",
-                                 json.dumps(r.headers), json.dumps(result))
+                    logger.error("Upload image error, response body=>%s", json.dumps(result))
                     raise requests.HTTPError("Upload image error,error code:40010,"
-                                             "response: %s" % json.dumps(result))
+                                            "response: %s" % json.dumps(result))
                 else:
                     raise Exception(
                         "Upload image error,response code:%d,response body: %s" %
@@ -99,6 +106,7 @@ class LarkNotification(BaseNotification):  # pylint: disable=too-few-public-meth
                                 r.status_code, r.text)
         except Exception as ex:
             logger.error
+            logger.error(r.request.path_url)
             raise ex
 
     @staticmethod
@@ -162,7 +170,7 @@ class LarkNotification(BaseNotification):  # pylint: disable=too-few-public-meth
         }
                 """ % {
                     "name": self._content.name,
-                    "title": "Explore in Superset" if self._content.type == "chart" or self._content.type == "dashboard" else "Explore in Finebi",
+                    "title": "Explore in Superset",
                     "description": self._content.description or "",
                     "now": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     "url": self._content.url,
@@ -198,16 +206,16 @@ class LarkNotification(BaseNotification):  # pylint: disable=too-few-public-meth
                        "description": self._content.description or "", }
             )
 
-    def _get_inline_file(self) -> Optional[Union[str, IOBase, bytes]]:
+    def _get_inline_file(self) -> Sequence[Union[str, IOBase, bytes]]:
         if self._content.csv:
-            return self._content.csv
-        if self._content.screenshot:
-            return self._content.screenshot
-        return None
+            return [self._content.csv]
+        if self._content.screenshots:
+            return self._content.screenshots
+        return []
 
     @retry(IOError, delay=10, backoff=2, tries=5)
     def send(self) -> None:
-        file = self._get_inline_file()
+        files = self._get_inline_file()
         try:
             app_id = app.config["APP_ID"]
             app_secret = app.config["APP_SECRET"]
@@ -215,10 +223,10 @@ class LarkNotification(BaseNotification):  # pylint: disable=too-few-public-meth
             tenant_access_token = self._get_tenant_access_token(app_id, app_secret)
             logger.info("tenant_access_token: %s", tenant_access_token)
 
-            if file:
+            if len(files) != 0:
                 # Upload file to lark server
                 logger.info("Uploading file to lark server...")
-                image_key = self._files_upload(tenant_access_token, file)
+                image_key = self._files_upload(tenant_access_token, files)
                 logger.info("image_key: %s", image_key)
                 payload = self._get_body(image_key)
                 # Send lark message
